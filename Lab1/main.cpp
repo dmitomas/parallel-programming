@@ -6,8 +6,8 @@
 #include <ctime>
 #include <stdexcept>
 #include <string>
+#include <omp.h>
 
-size_t N = 1000;
 
 
 using matrix = std::vector<std::vector<int>>;
@@ -16,8 +16,10 @@ using matrix = std::vector<std::vector<int>>;
 matrix multiply(const matrix& A, const matrix& B) {
 	size_t n = A.size();
 	matrix C(n, std::vector<int>(n, 0));
-	for (size_t i = 0; i < n; ++i) {
-		for (size_t k = 0; k < n; ++k) {
+
+	#pragma omp parallel for schedule(static)
+	for (int i = 0; i < n; ++i) {
+		for (size_t k = 0; k < n; ++k) {	
 			for (size_t j = 0; j < n; ++j) {
 				C[i][j] += A[i][k] * B[k][j];
 			}
@@ -67,25 +69,35 @@ void write_matrix(const std::string& file, const matrix& M) {
 
 
 
-int main() {
+int main(int argc, char** argv) {
+
+	int N = (argc > 1) ? std::atoi(argv[1]) : 1000;
+	int threads = (argc > 2) ? std::atoi(argv[2]) : 4;
+
+
+	omp_set_num_threads(threads);
+
 	matrix A = generate_matrix(N);
 	matrix B = generate_matrix(N);
 
 	write_matrix("assets\\data\\matrix_A", A);
 	write_matrix("assets\\data\\matrix_B", B);
 
-	std::clock_t start = std::clock();
+
+
+	double start = omp_get_wtime();
 
 	matrix C = multiply(A, B);
 
-	std::clock_t end = std::clock();
+	double end = omp_get_wtime();
+
 
 	write_matrix("assets\\data\\result_matrix_C", C);
 
-	double time = double(end - start) / CLOCKS_PER_SEC;
+	double time = double(end - start);
 
 
-
+	std::cout << "Количество потоков - " << threads << std::endl;
 	std::cout << "Размерность матрицы - " << N << std::endl;
 	std::cout << "Длительность вычеслений - " << time << " сек." << std::endl;
 
