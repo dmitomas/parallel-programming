@@ -6,6 +6,7 @@
 #include <ctime>
 #include <stdexcept>
 #include <string>
+#include <mpi.h>
 
 size_t N = 1000;
 
@@ -70,6 +71,8 @@ void write_matrix(const std::string& file, const matrix& M) {
 int main() {
 	matrix A = generate_matrix(N);
 	matrix B = generate_matrix(N);
+
+	MPI_Init(&argc, &argv);
 
 	write_matrix("assets\\data\\matrix_A", A);
 	write_matrix("assets\\data\\matrix_B", B);
